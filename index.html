@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasuu Baybee 💗</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Press Start 2P';
+  background:#ffd6eb;
+  color:#ff3f8e;
+  text-align:center;
+  overflow-x:hidden;
+}
+
+.screen{display:none}
+.active{display:block}
+
+.card{
+  background:white;
+  max-width:520px;
+  margin:30px auto;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 15px 30px rgba(255,0,120,.2);
+}
+
+button{
+  font-family:inherit;
+  border:none;
+  padding:14px 18px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.yes{
+  background:#ff5fa2;
+  color:white;
+  font-size:14px;
+}
+
+.no{
+  background:#ffc0da;
+  color:#ff3f8e;
+  font-size:14px;
+}
+
+.catrow{font-size:40px;margin:10px}
+.small{font-size:10px; line-height:1.6}
+
+/* ----------------------------
+   UPGRADED ENVELOPE ANIMATION
+----------------------------- */
+.envelopeWrap{display:flex;justify-content:center;margin:10px}
+
+.envelope{
+  width:220px;height:140px;
+  background:#ffe3f0;
+  border-radius:14px;
+  position:relative;
+  overflow:hidden;
+  border:2px solid #ff8fc0;
+  perspective: 900px;
+}
+
+.flap{
+  position:absolute;
+  left:0; right:0; top:0;
+  height:70px;
+  background:#ff8fc0;
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  transform-origin:top center;
+  transform: rotateX(0deg);
+  transition: transform .9s ease;
+  z-index: 5;
+}
+
+/* Letter sheet slides out */
+.letterSheet{
+  position:absolute;
+  left:14px; right:14px;
+  bottom:10px;
+  height:110px;
+  background:white;
+  border-radius:12px;
+  border:2px solid rgba(255,95,162,0.25);
+  box-shadow: 0 10px 18px rgba(255,95,162,.18);
+  transform: translateY(70px);
+  transition: transform 1s ease;
+  z-index: 2;
+}
+
+/* Polaroid pops out (fills the "empty area" nicely) */
+.polaroid{
+  position:absolute;
+  width:86px;
+  height:96px;
+  right:18px;
+  bottom:18px;
+  background:white;
+  border-radius:10px;
+  border:2px solid rgba(255,95,162,0.25);
+  box-shadow: 0 12px 20px rgba(255,95,162,.18);
+  padding:6px;
+  transform: translateY(80px) rotate(6deg);
+  opacity: 0;
+  transition: transform 1.05s ease, opacity .6s ease;
+  z-index: 4;
+}
+.polaroid img{
+  width:100%;
+  height:68px;
+  object-fit:cover;
+  border-radius:8px;
+}
+.polaroid span{
+  display:block;
+  font-size:7px;
+  margin-top:6px;
+  color:#ff3f8e;
+}
+
+/* Sparkles */
+.spark{
+  position:absolute;
+  width:10px; height:10px;
+  background:white;
+  border-radius:2px;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px rgba(255,95,162,.25);
+  opacity:0;
+  z-index: 6;
+}
+
+.envelope.open .flap{ transform: rotateX(170deg); }
+.envelope.open .letterSheet{ transform: translateY(-18px); }
+.envelope.open .polaroid{ transform: translateY(-6px) rotate(-6deg); opacity:1; }
+
+@keyframes sparklePop{
+  0%{ transform: translate(0,0) rotate(45deg) scale(.4); opacity:0; }
+  40%{ opacity:1; }
+  100%{ transform: translate(var(--dx), var(--dy)) rotate(45deg) scale(1); opacity:0; }
+}
+.envelope.open .spark{ animation: sparklePop .9s ease forwards; }
+
+/* Hearts */
+.heart{
+  position:fixed;
+  bottom:-20px;
+  animation:float 6s linear forwards;
+}
+@keyframes float{
+  to{transform:translateY(-120vh);opacity:0}
+}
+
+/* Glow first line */
+.glow{
+  text-shadow:0 0 8px pink,0 0 15px hotpink;
+  animation:beat 1s infinite;
+  display:inline-block;
+}
+@keyframes beat{
+  50%{transform:scale(1.06)}
+}
+
+/* Gallery */
+.gallery{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px
+}
+.gallery img{
+  width:100%;
+  border-radius:10px;
+  object-fit:cover;
+  border:2px solid rgba(255,95,162,0.25);
+}
+
+/* Floating controls (top-right) */
+.floatingControls{
+  position:fixed;
+  top:14px;
+  right:14px;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-end;
+}
+.mini{
+  padding:10px 12px;
+  font-size:10px;
+  border-radius:999px;
+}
+.tip{
+  background:rgba(255,255,255,0.75);
+  border:2px dashed rgba(255,95,162,0.35);
+  color:#ff3f8e;
+  font-size:9px;
+  padding:8px 10px;
+  border-radius:14px;
+  max-width:220px;
+  text-align:right;
+}
+
+/* Mobile */
+@media (max-width:520px){
+  .gallery{ grid-template-columns:repeat(3,1fr); }
+  .card{ margin:18px 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Floating controls -->
+<div class="floatingControls">
+  <button class="yes mini" id="musicBtn" onclick="toggleMusic()">Play 🎵</button>
+  <div class="tip" id="soundTip">🔊 Tap anywhere once to turn sound ON</div>
+</div>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="s1">
+  <div class="card">
+    <div class="catrow">🐱💗🐱</div>
+    <h2>Kashak (Kasuu Baybee)</h2>
+    <p class="small">Question from Abhishek (love of your life):</p>
+    <h2>Will you be my Valentine?</h2>
+
+    <button class="yes" id="yesBtn">YES 💕</button>
+    <br><br>
+    <button class="no" id="noBtn">NO 😼</button>
+
+    <p id="note" class="small"></p>
+  </div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="s2">
+  <div class="card">
+    <div class="catrow">💌🐱</div>
+
+    <div class="envelopeWrap">
+      <div class="envelope" id="env">
+        <div class="flap"></div>
+
+        <!-- Letter slides out -->
+        <div class="letterSheet"></div>
+
+        <!-- Polaroid pops out (change to photo6.jpg if you want) -->
+        <div class="polaroid">
+          <img src="photo1.jpg" alt="polaroid">
+          <span>Kasuu 💗</span>
+        </div>
+
+        <!-- Sparkles -->
+        <div class="spark" style="top:22px; left:28px; --dx:-18px; --dy:-18px;"></div>
+        <div class="spark" style="top:30px; right:32px; --dx:18px; --dy:-18px;"></div>
+        <div class="spark" style="bottom:18px; left:38px; --dx:-10px; --dy:18px;"></div>
+      </div>
+    </div>
+
+    <h3>For my Kasuu baybee</h3>
+    <p id="typedLetter" style="min-height:180px"></p>
+
+    <h3>Our Memories</h3>
+    <div class="gallery">
+      <img src="photo1.jpg" alt="photo1">
+      <img src="photo2.jpg" alt="photo2">
+      <img src="photo3.jpg" alt="photo3">
+      <img src="photo4.jpg" alt="photo4">
+      <img src="photo5.jpg" alt="photo5">
+      <img src="photo6.jpg" alt="photo6">
+    </div>
+
+    <br>
+    <button class="yes" onclick="show('s3')">Plan Date 💖</button>
+  </div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="s3">
+  <div class="card">
+    <h2>Choose Date Type</h2>
+
+    <button class="yes" onclick="selectPlan('Go Out 🏙️')">Go Out 🏙️</button><br><br>
+    <button class="yes" onclick="selectPlan('Stay In 🏠')">Stay In 🏠</button><br><br>
+    <button class="yes" onclick="selectPlan('Cuddle Mode 🥺🐱')">Cuddle Mode 🥺🐱</button><br><br>
+
+    <p class="small">Pick one — it will automatically go to food 🍓</p>
+  </div>
+</div>
+
+<!-- SCREEN 4 -->
+<div class="screen" id="s4">
+  <div class="card">
+    <h2>Food Choice</h2>
+
+    <button class="yes" onclick="finish('Pizza 🍕')">Pizza 🍕</button><br><br>
+    <button class="yes" onclick="finish('Burger 🍔')">Burger 🍔</button><br><br>
+    <button class="yes" onclick="finish('Dessert 🍰')">Dessert 🍰</button><br><br>
+  </div>
+</div>
+
+<!-- SCREEN 5 -->
+<div class="screen" id="s5">
+  <div class="card">
+    <div class="catrow">🐱💞🐱</div>
+    <h2>IT'S A DATE 💗</h2>
+    <p id="finalText"></p>
+    <p class="small">Forever yours — Abhishek 💕</p>
+  </div>
+</div>
+
+<!-- Music -->
+<audio id="bgm" loop playsinline>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+/* ---------- Buttons & UI ---------- */
+let noClicks=0;
+let yesScale=1;
+let noScale=1;
+
+const noBtn=document.getElementById("noBtn");
+const yesBtn=document.getElementById("yesBtn");
+const note=document.getElementById("note");
+
+/* Funny NO messages */
+const lines=[
+  "Kasuu pls 🥺",
+  "Cat is crying 😿",
+  "This NO button is scared...",
+  "Stop playing hard to get 😼",
+  "Just say YES 💗"
+];
+
+/* NO shrinks, YES grows */
+noBtn.onclick=()=>{
+  noClicks++;
+
+  noScale=Math.max(0.25, noScale-0.12);
+  yesScale=Math.min(2.4, yesScale+0.15);
+
+  noBtn.style.transform=`scale(${noScale})`;
+  yesBtn.style.transform=`scale(${yesScale})`;
+
+  note.innerText=lines[noClicks%lines.length];
+  spawnHearts(4);
+};
+
+yesBtn.onclick=()=>{
+  show("s2");
+  openLetter();
+  enableSoundNow(); // try to turn sound on after YES click
+};
+
+/* Screen switch */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ---------- Letter ---------- */
+const letter=`Mero Kasuu 💗
+
+I just want you to know how deeply I love you.
+You are not just someone I care about — you are the person my heart chose.
+
+Every smile of yours makes my day better.
+Every moment with you feels special.
+
+Kashak, you are my favorite person in this world.
+I love you more than words can explain.
+
+Forever yours,
+Abhishek 💞`;
+
+function openLetter(){
+  const env = document.getElementById("env");
+  env.classList.add("open");
+  spawnHearts(14);
+
+  let i=0;
+  const el=document.getElementById("typedLetter");
+
+  const typing=setInterval(()=>{
+    const txt=letter.slice(0,i++);
+    const parts=txt.split("\n");
+    if(parts.length>0){
+      parts[0]=`<span class="glow">${parts[0]}</span>`;
+    }
+    el.innerHTML=parts.join("<br>");
+    if(i>letter.length) clearInterval(typing);
+  },25);
+}
+
+/* ---------- Planner ---------- */
+let plan="";
+function selectPlan(p){
+  plan=p;
+  show("s4");       // auto next
+  spawnHearts(10);
+}
+
+function finish(food){
+  show("s5");
+  document.getElementById("finalText").innerHTML =
+    `Date Plan: ${plan || "Cuddle Mode 🥺🐱"}<br>Food: ${food}<br><br>Kasuu Baybee said YES 💗`;
+  spawnHearts(25);
+}
+
+/* ---------- Hearts ---------- */
+function spawnHearts(n){
+  for(let i=0;i<n;i++){
+    const h=document.createElement("div");
+    h.className="heart";
+    h.innerText=Math.random()<.3?"🐱":"💗";
+    h.style.left=Math.random()*100+"vw";
+    h.style.fontSize=(14+Math.random()*20)+"px";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),6000);
+  }
+}
+setInterval(()=>spawnHearts(1),1200);
+
+/* ---------- Music: best possible autoplay ---------- */
+const bgm=document.getElementById("bgm");
+let music=false;
+
+/*
+  Browser rules:
+  - Autoplay with SOUND is blocked.
+  - Autoplay MUTED is usually allowed.
+  So we start muted, then first user click un-mutes + fades in.
+*/
+function startMutedAutoplay(){
+  try{
+    bgm.muted = true;
+    bgm.volume = 0;
+    const p = bgm.play();
+    if(p && p.catch) p.catch(()=>{});
+  } catch(e){}
+}
+startMutedAutoplay();
+
+function fadeInToFullVolume(){
+  let v = 0;
+  const t = setInterval(()=>{
+    v = Math.min(1, v + 0.05);
+    bgm.volume = v;
+    if(v >= 1) clearInterval(t);
+  }, 120);
+}
+
+function enableSoundNow(){
+  // unmute + fade in after user gesture
+  bgm.muted = false;
+  music = true;
+  document.getElementById("musicBtn").innerText = "Pause ⏸";
+  document.getElementById("soundTip").style.display = "none";
+
+  const p = bgm.play();
+  if(p && p.catch) p.catch(()=>{});
+
+  fadeInToFullVolume();
+}
+
+// Enable sound on first interaction anywhere
+document.addEventListener("pointerdown", () => {
+  if(!music) enableSoundNow();
+}, { once:true });
+
+function toggleMusic(){
+  const btn=document.getElementById("musicBtn");
+  const tip=document.getElementById("soundTip");
+
+  if(!music){
+    enableSoundNow();
+    btn.innerText="Pause ⏸";
+    tip.style.display = "none";
+  } else {
+    bgm.pause();
+    music=false;
+    btn.innerText="Play 🎵";
+    tip.style.display = "block";
+  }
+}
+</script>
+
+</body>
+</html>
